@@ -6,31 +6,43 @@ import java.util.Random;
  * Simulation of the Monty Hall Problem
  */
 public class MontyHallSimulation {
-    private static final int DEFAULT_NUMBER_OF_DOORS = 3;
-    private static final int DEFAULT_NUMBER_OF_TRIES = 1000;
+    private static final int DEFAULT_NUMBER_OF_BOXES = 3;
+    private static final int DEFAULT_NUMBER_OF_ROUNDS = 1000;
 
-    private final int numberOfTries;
-    private final int numberOfDoors;
+    private static final int MIN_NUMBER_OF_BOXES = 3;
+    private static final int MIN_NUMBER_OF_ROUNDS = 1;
 
+    private final int numberOfRounds;
+    private final int numberOfBoxes;
+
+    final Random generator = new Random();
+
+    //
+    // Constructors
+    //
     public MontyHallSimulation() {
-        this(DEFAULT_NUMBER_OF_TRIES, DEFAULT_NUMBER_OF_DOORS);
+        this(DEFAULT_NUMBER_OF_ROUNDS, DEFAULT_NUMBER_OF_BOXES);
     }
 
-    public MontyHallSimulation(final int numberOfTries) {
-        this(numberOfTries, DEFAULT_NUMBER_OF_DOORS);
+    public MontyHallSimulation(final int numberOfRounds) {
+        this(numberOfRounds, DEFAULT_NUMBER_OF_BOXES);
     }
 
-    public MontyHallSimulation(final int numberOfTries, final int numberOfDoors) {
-        this.numberOfTries = numberOfTries;
-        this.numberOfDoors = numberOfDoors;
+    public MontyHallSimulation(final int numberOfRounds, final int numberOfBoxes) {
+        this.numberOfRounds = Math.max(numberOfRounds, MIN_NUMBER_OF_ROUNDS);
+        this.numberOfBoxes = Math.max(numberOfBoxes, MIN_NUMBER_OF_BOXES);
     }
 
+    /**
+     * Run the simulation and return the number of wins when staying and the number of wins when switching.
+     *
+     * @return Result which contains the number of wins for each alternative
+     */
     public Result run() {
-        final Result result = new Result(numberOfTries);
-        final Random generator = new Random();
+        final Result result = new Result(numberOfRounds);
 
-        for (int i = 0; i < this.numberOfTries; i++) {
-            runOneRound(result, generator);
+        for (int i = 0; i < this.numberOfRounds; i++) {
+            oneRound(result);
         }
 
         return result;
@@ -39,45 +51,41 @@ public class MontyHallSimulation {
     //
     // private helper methods
     //
+    private void oneRound(final Result result) {
+        final int winningBox = pickBox();
+        int chosenBox = pickBox();
+        int openedBox = pickBox(winningBox, chosenBox);
+        int switchedBox = pickBox(chosenBox, openedBox);
 
-    private void runOneRound(final Result result, final Random generator) {
-        boolean[] doors = new boolean[numberOfDoors];
-        final int winningDoor = pickDoor(generator);
-        doors[winningDoor] = true;
-        int chosenDoor = pickDoor(generator);
-        int shownDoor = pickDoor(generator, winningDoor, chosenDoor);
-        int switchDoor = pickDoor(generator, chosenDoor, shownDoor);
-
-        if (doors[chosenDoor]) {
+        if (chosenBox == winningBox) {
             result.incrementStayWins();
-        } else if (doors[switchDoor]) {
+        } else if (switchedBox == winningBox) {
             result.incrementSwitchWins();
         }
     }
 
-    private int pickDoor(final Random generator) {
-        return generator.nextInt(numberOfDoors);
+    private int pickBox() {
+        return this.generator.nextInt(numberOfBoxes);
     }
 
-    private int pickDoor(final Random generator, final int excludeDoor1, final int excludeDoor2) {
-        int door;
+    private int pickBox(final int excludeBox1, final int excludeBox2) {
+        int box;
         do {
-            door = pickDoor(generator);
-        } while (excludeDoor1 == door || excludeDoor2 == door);
+            box = pickBox();
+        } while (excludeBox1 == box || excludeBox2 == box);
 
-        return door;
+        return box;
     }
 
     //
     // Getters
     //
-
-    public int getNumberOfTries() {
-        return numberOfTries;
+    public int getNumberOfRounds() {
+        return numberOfRounds;
     }
 
-    public int getNumberOfDoors() {
-        return numberOfDoors;
+    public int getNumberOfBoxes() {
+        return numberOfBoxes;
     }
 
     /**

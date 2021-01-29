@@ -13,8 +13,8 @@ class SimulationTest {
     @Test
     void testSimulationWithDefaultValues() {
         MontyHallSimulation simulation = new MontyHallSimulation();
-        assertEquals(1000, simulation.getNumberOfTries(), "Default number of tries is used");
-        assertEquals(3, simulation.getNumberOfDoors(), "Default number of doors is used");
+        assertEquals(1000, simulation.getNumberOfRounds(), "Default number of rounds is used");
+        assertEquals(3, simulation.getNumberOfBoxes(), "Default number of boxes is used");
         var result = simulation.run();
         assertNotNull(result);
         assertTrue(result.getSwitchWins() > 0);
@@ -23,12 +23,17 @@ class SimulationTest {
     }
 
     @Test
-    void testSimulationWithFiveDoorsHundredTries() {
+    void testSimulationWithFiveBoxesHundredRounds() {
         MontyHallSimulation simulation = new MontyHallSimulation(100, 5);
-        assertEquals(5, simulation.getNumberOfDoors());
-        assertEquals(100, simulation.getNumberOfTries());
-        final var result = simulation.run();
-        assertNotNull(result);
-        logger.info("Test with 5 doors and 100 tries! {}", result);
+        assertEquals(5, simulation.getNumberOfBoxes());
+        assertEquals(100, simulation.getNumberOfRounds());
+        logger.info("Test with 5 boxes and 100 rounds! {}", simulation.run());
+    }
+
+    @Test
+    void testInvalidValues() {
+        MontyHallSimulation simulation = new MontyHallSimulation(0, 2);
+        assertEquals(3, simulation.getNumberOfBoxes());
+        assertEquals(1, simulation.getNumberOfRounds());
     }
 }
