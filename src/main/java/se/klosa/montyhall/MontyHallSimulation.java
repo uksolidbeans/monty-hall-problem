@@ -1,6 +1,8 @@
 package se.klosa.montyhall;
 
 import java.util.Random;
+import java.util.function.IntBinaryOperator;
+import java.util.function.Supplier;
 
 /**
  * Simulation of the Monty Hall Problem
@@ -15,7 +17,9 @@ public class MontyHallSimulation {
     private final int numberOfRounds;
     private final int numberOfBoxes;
 
-    final Random generator = new Random();
+    private final Random generator = new Random();
+    private final Supplier<Integer> pickBox;
+    private final IntBinaryOperator pickRemainingBox;
 
     //
     // Constructors
@@ -31,6 +35,16 @@ public class MontyHallSimulation {
     public MontyHallSimulation(final int numberOfRounds, final int numberOfBoxes) {
         this.numberOfRounds = Math.max(numberOfRounds, MIN_NUMBER_OF_ROUNDS);
         this.numberOfBoxes = Math.max(numberOfBoxes, MIN_NUMBER_OF_BOXES);
+
+        pickBox = () -> this.generator.nextInt(this.numberOfBoxes);
+        pickRemainingBox = (excludeBox1, excludeBox2) -> {
+            int box;
+            do {
+                box = pickBox.get();
+            } while (excludeBox1 == box || excludeBox2 == box);
+
+            return box;
+        };
     }
 
     /**
@@ -52,29 +66,16 @@ public class MontyHallSimulation {
     // private helper methods
     //
     private void oneRound(final Result result) {
-        final int winningBox = pickBox();
-        int chosenBox = pickBox();
-        int openedBox = pickBox(winningBox, chosenBox);
-        int switchedBox = pickBox(chosenBox, openedBox);
+        final int winningBox = pickBox.get();
+        int chosenBox = pickBox.get();
+        int openedBox = pickRemainingBox.applyAsInt(winningBox, chosenBox);
+        int switchedBox = pickRemainingBox.applyAsInt(chosenBox, openedBox);
 
         if (chosenBox == winningBox) {
             result.incrementStayWins();
         } else if (switchedBox == winningBox) {
             result.incrementSwitchWins();
         }
-    }
-
-    private int pickBox() {
-        return this.generator.nextInt(numberOfBoxes);
-    }
-
-    private int pickBox(final int excludeBox1, final int excludeBox2) {
-        int box;
-        do {
-            box = pickBox();
-        } while (excludeBox1 == box || excludeBox2 == box);
-
-        return box;
     }
 
     //
