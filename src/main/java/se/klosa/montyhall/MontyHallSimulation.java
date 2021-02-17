@@ -1,9 +1,5 @@
 package se.klosa.montyhall;
 
-import java.util.Random;
-import java.util.function.IntBinaryOperator;
-import java.util.function.Supplier;
-
 /**
  * Simulation of the Monty Hall Problem
  */
@@ -17,9 +13,7 @@ public class MontyHallSimulation {
     private final int numberOfRounds;
     private final int numberOfBoxes;
 
-    private final Random generator = new Random();
-    private final Supplier<Integer> pickBox;
-    private final IntBinaryOperator pickRemainingBox;
+    private final BoxSet boxSet;
 
     //
     // Constructors
@@ -35,16 +29,7 @@ public class MontyHallSimulation {
     public MontyHallSimulation(final int numberOfRounds, final int numberOfBoxes) {
         this.numberOfRounds = Math.max(numberOfRounds, MIN_NUMBER_OF_ROUNDS);
         this.numberOfBoxes = Math.max(numberOfBoxes, MIN_NUMBER_OF_BOXES);
-
-        pickBox = () -> this.generator.nextInt(this.numberOfBoxes);
-        pickRemainingBox = (excludeBox1, excludeBox2) -> {
-            int box;
-            do {
-                box = pickBox.get();
-            } while (excludeBox1 == box || excludeBox2 == box);
-
-            return box;
-        };
+        boxSet = new BoxSet(this.numberOfBoxes);
     }
 
     /**
@@ -56,26 +41,18 @@ public class MontyHallSimulation {
         final Result result = new Result(numberOfRounds);
 
         for (int i = 0; i < this.numberOfRounds; i++) {
-            oneRound(result);
+            boxSet.createNewSet();
+            boxSet.contestantChoosesBox();
+            boxSet.showMasterOpensEmptyBox();
+
+            if (boxSet.contestantChoosesToStay()) {
+                result.incrementStayWins();
+            } else if (boxSet.contestantChoosesToSwitch()) {
+                result.incrementSwitchWins();
+            }
         }
 
         return result;
-    }
-
-    //
-    // private helper methods
-    //
-    private void oneRound(final Result result) {
-        final int winningBox = pickBox.get();
-        int chosenBox = pickBox.get();
-        int openedBox = pickRemainingBox.applyAsInt(winningBox, chosenBox);
-        int switchedBox = pickRemainingBox.applyAsInt(chosenBox, openedBox);
-
-        if (chosenBox == winningBox) {
-            result.incrementStayWins();
-        } else if (switchedBox == winningBox) {
-            result.incrementSwitchWins();
-        }
     }
 
     //
